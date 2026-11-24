@@ -13,8 +13,12 @@
 
     <section class="experience" aria-label="音の周波数体験">
       <div class="frequency-display" aria-live="polite">
-        <span id="frequencyValue">1,000</span>
-        <span class="unit">Hz</span>
+        <button id="frequencyDownButton" class="frequency-step-button" type="button" aria-label="周波数を下げる">－</button>
+        <span class="frequency-value-wrap">
+          <span id="frequencyValue">1,000</span>
+          <span class="unit">Hz</span>
+        </span>
+        <button id="frequencyUpButton" class="frequency-step-button" type="button" aria-label="周波数を上げる">＋</button>
       </div>
 
       <div class="slider-area">
