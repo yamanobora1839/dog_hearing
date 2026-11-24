@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fffaf2">
+  <title>犬の耳体験</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <h1>音の高さを変えて、犬の耳を体験してみよう！</h1>
+
+    <section class="experience" aria-label="音の周波数体験">
+      <div class="frequency-display" aria-live="polite">
+        <span id="frequencyValue">10000</span>
+        <span class="unit">Hz</span>
+      </div>
+
+      <div class="slider-area">
+        <input
+          id="frequencySlider"
+          type="range"
+          min="500"
+          max="18000"
+          step="100"
+          value="10000"
+          aria-label="音の周波数"
+        >
+        <div class="range-labels" aria-hidden="true">
+          <span>低い音 500 Hz</span>
+          <span>18,000 Hz 高い音</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="startButton" class="button button-start" type="button">音を鳴らす</button>
+        <button id="stopButton" class="button button-stop" type="button" disabled>停止</button>
+      </div>
+
+      <p id="status" class="status" role="status">停止中</p>
+    </section>
+
+    <p class="explanation">
+      人間には聞こえにくい高い音でも、犬には聞こえていることがあります。
+      犬は人間よりも高い周波数の音を聞き取れる動物です。
+      ただし、人間や犬の聞こえる周波数には個体差があるため、特定の周波数を境界として断定しません。
+    </p>
+
+    <p class="device-note">
+      スマートフォンの機種やスピーカーによって、音が十分な大きさで聞こえない場合があります。
+      音を生成している周波数と、実際に聞こえる音とは異なることがあります。
+    </p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
