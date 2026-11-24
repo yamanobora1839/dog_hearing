@@ -55,9 +55,9 @@ function getFrequencyExplanation(frequency) {
     return "この音は、人間には聞こえることがありますが、犬には聞こえにくい低い音です。";
   }
   if (frequency <= 20000) {
-    return "人間にも犬にも聞こえる可能性がある音域です。";
+    return "人間にも犬にも聞こえるとされる音域です。";
   }
-  return "人間には聞こえにくい高い音です。犬には聞こえる可能性があります！";
+  return "人間には聞こえにくい高い音です。犬には聞こえるとされる音域です！";
 }
 
 function updateFrequency() {
