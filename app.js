@@ -2,7 +2,6 @@
 
 const MIN_FREQUENCY = 10;
 const MAX_FREQUENCY = 25000;
-const SLIDER_MAX = 1000;
 
 const slider = document.getElementById("frequencySlider");
 const frequencyValue = document.getElementById("frequencyValue");
@@ -16,15 +15,9 @@ let oscillator = null;
 let gainNode = null;
 let isPlaying = false;
 
-function sliderPositionToFrequency(position) {
-  const ratio = position / SLIDER_MAX;
-  return Math.round(MIN_FREQUENCY * (MAX_FREQUENCY / MIN_FREQUENCY) ** ratio);
-}
-
-function frequencyToSliderPosition(frequency) {
-  return Math.round(
-    (Math.log(frequency / MIN_FREQUENCY) / Math.log(MAX_FREQUENCY / MIN_FREQUENCY)) * SLIDER_MAX
-  );
+function readFrequency() {
+  // rangeの値そのものがHz。変換や1000Hzでの上限処理は行わない。
+  return Math.min(MAX_FREQUENCY, Math.max(MIN_FREQUENCY, Number(slider.value)));
 }
 
 function getFrequencyExplanation(frequency) {
@@ -41,18 +34,17 @@ function getFrequencyExplanation(frequency) {
 }
 
 function updateFrequency() {
-  const frequency = sliderPositionToFrequency(Number(slider.value));
-  frequencyValue.textContent = frequency.toLocaleString("ja-JP");
+  const frequency = readFrequency();
+  const formattedFrequency = frequency.toLocaleString("ja-JP");
+
+  frequencyValue.textContent = formattedFrequency;
   frequencyExplanation.textContent = getFrequencyExplanation(frequency);
-  slider.setAttribute("aria-valuetext", `${frequency.toLocaleString("ja-JP")} Hz`);
+  slider.setAttribute("aria-valuetext", `${formattedFrequency} Hz`);
 
   if (isPlaying && oscillator && audioContext) {
-    // 同じOscillatorNodeの周波数だけを滑らかに更新し、再生を継続する
+    // 既存のOscillatorNodeを維持したまま、表示と同じHzへ滑らかに更新
     oscillator.frequency.setTargetAtTime(frequency, audioContext.currentTime, 0.015);
-  }
-
-  if (isPlaying) {
-    status.textContent = `再生中：${frequency.toLocaleString("ja-JP")} Hz`;
+    status.textContent = `再生中：${formattedFrequency} Hz`;
   }
 }
 
@@ -101,11 +93,9 @@ async function startSound() {
     oscillator = audioContext.createOscillator();
     gainNode = audioContext.createGain();
 
+    const frequency = readFrequency();
     oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(
-      sliderPositionToFrequency(Number(slider.value)),
-      audioContext.currentTime
-    );
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
 
     // 控えめな音量を維持
     gainNode.gain.setValueAtTime(0.035, audioContext.currentTime);
@@ -117,7 +107,7 @@ async function startSound() {
     isPlaying = true;
     startButton.disabled = true;
     stopButton.disabled = false;
-    status.textContent = `再生中：${frequencyValue.textContent} Hz`;
+    status.textContent = `再生中：${frequency.toLocaleString("ja-JP")} Hz`;
     status.classList.add("playing");
   } catch (error) {
     stopSound();
@@ -138,5 +128,8 @@ document.addEventListener("visibilitychange", () => {
 
 window.addEventListener("blur", stopSound);
 
-slider.value = String(frequencyToSliderPosition(10000));
+// DOMの範囲属性とJavaScriptの範囲定義の不一致を早期に検出
+if (Number(slider.min) !== MIN_FREQUENCY || Number(slider.max) !== MAX_FREQUENCY) {
+  throw new Error("スライダーの周波数範囲が設定と一致しません");
+}
 updateFrequency();
