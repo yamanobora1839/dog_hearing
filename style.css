@@ -356,10 +356,6 @@ input[type="range"]::-moz-range-thumb {
     padding-top: 14px;
   }
 
-  #frequencyValue {
-    font-size: 42px;
-  }
-
   .frequency-display {
     min-height: 44px;
   }
