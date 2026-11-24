@@ -13,6 +13,8 @@ const SLIDER_SEGMENTS = [
 const slider = document.getElementById("frequencySlider");
 const frequencyValue = document.getElementById("frequencyValue");
 const frequencyExplanation = document.getElementById("frequencyExplanation");
+const frequencyDownButton = document.getElementById("frequencyDownButton");
+const frequencyUpButton = document.getElementById("frequencyUpButton");
 const startButton = document.getElementById("startButton");
 const stopButton = document.getElementById("stopButton");
 const status = document.getElementById("status");
@@ -21,6 +23,13 @@ let audioContext = null;
 let oscillator = null;
 let gainNode = null;
 let isPlaying = false;
+let currentFrequency = null;
+
+let repeatTimer = null;
+let activePointerId = null;
+let activeStepButton = null;
+let activeDirection = 0;
+let pressStartedAt = 0;
 
 function frequencyAtPosition(position) {
   const x = Math.min(SLIDER_MAX, Math.max(0, Number(position)));
@@ -44,7 +53,9 @@ function positionForFrequency(frequency) {
 }
 
 function readFrequency() {
-  return frequencyAtPosition(slider.value);
+  return currentFrequency === null
+    ? frequencyAtPosition(slider.value)
+    : currentFrequency;
 }
 
 function getFrequencyExplanation(frequency) {
@@ -60,6 +71,15 @@ function getFrequencyExplanation(frequency) {
   return "人間には聞こえにくい高い音です。犬には聞こえるとされる音域です！";
 }
 
+function updateStepButtonStates(frequency = readFrequency()) {
+  if (frequencyDownButton !== activeStepButton) {
+    frequencyDownButton.disabled = frequency <= MIN_FREQUENCY;
+  }
+  if (frequencyUpButton !== activeStepButton) {
+    frequencyUpButton.disabled = frequency >= MAX_FREQUENCY;
+  }
+}
+
 function updateFrequency() {
   const frequency = readFrequency();
   const formattedFrequency = frequency.toLocaleString("ja-JP");
@@ -67,6 +87,7 @@ function updateFrequency() {
   frequencyValue.textContent = formattedFrequency;
   frequencyExplanation.textContent = getFrequencyExplanation(frequency);
   slider.setAttribute("aria-valuetext", `${formattedFrequency} Hz`);
+  updateStepButtonStates(frequency);
 
   if (isPlaying && oscillator && audioContext) {
     oscillator.frequency.setTargetAtTime(
@@ -75,6 +96,148 @@ function updateFrequency() {
       0.015
     );
     status.textContent = `再生中：${formattedFrequency} Hz`;
+  }
+}
+
+function setFrequency(frequency) {
+  currentFrequency = Math.min(
+    MAX_FREQUENCY,
+    Math.max(MIN_FREQUENCY, Math.round(frequency))
+  );
+
+  slider.value = String(positionForFrequency(currentFrequency));
+  updateFrequency();
+}
+
+function stopRepeatTimer() {
+  if (repeatTimer !== null) {
+    window.clearInterval(repeatTimer);
+    repeatTimer = null;
+  }
+}
+
+function stopStepChange(pointerId = null) {
+  if (pointerId !== null && pointerId !== activePointerId) {
+    return;
+  }
+
+  const button = activeStepButton;
+  const capturedPointerId = activePointerId;
+
+  stopRepeatTimer();
+
+  activePointerId = null;
+  activeStepButton = null;
+  activeDirection = 0;
+  pressStartedAt = 0;
+
+  if (button) {
+    button.classList.remove("is-pressed");
+
+    if (
+      capturedPointerId !== null
+      && typeof button.hasPointerCapture === "function"
+      && button.hasPointerCapture(capturedPointerId)
+    ) {
+      try {
+        button.releasePointerCapture(capturedPointerId);
+      } catch (error) {
+        // Pointer Captureがすでに解除されている場合は無視する
+      }
+    }
+  }
+
+  updateStepButtonStates();
+}
+
+function changeFrequencyBy(direction, step) {
+  const frequency = readFrequency();
+  const nextFrequency = Math.min(
+    MAX_FREQUENCY,
+    Math.max(MIN_FREQUENCY, frequency + direction * step)
+  );
+
+  setFrequency(nextFrequency);
+
+  if (
+    (activeDirection < 0 && nextFrequency <= MIN_FREQUENCY)
+    || (activeDirection > 0 && nextFrequency >= MAX_FREQUENCY)
+  ) {
+    stopRepeatTimer();
+  }
+}
+
+function startStepChange(event, button, direction) {
+  if (
+    !event.isPrimary
+    || (event.pointerType === "mouse" && event.button !== 0)
+    || button.disabled
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+
+  if (activePointerId !== null) {
+    stopStepChange();
+  }
+
+  activePointerId = event.pointerId;
+  activeStepButton = button;
+  activeDirection = direction;
+  pressStartedAt = performance.now();
+
+  try {
+    button.setPointerCapture(event.pointerId);
+  } catch (error) {
+    // Pointer Captureを設定できない場合も押下処理自体は継続する
+  }
+
+  button.classList.add("is-pressed");
+
+  // 押下時に必ず1Hzだけ変化させる
+  changeFrequencyBy(direction, 1);
+
+  const reachedBoundary =
+    (direction < 0 && readFrequency() <= MIN_FREQUENCY)
+    || (direction > 0 && readFrequency() >= MAX_FREQUENCY);
+
+  if (!reachedBoundary) {
+    repeatTimer = window.setInterval(() => {
+      if (activePointerId === null) {
+        stopRepeatTimer();
+        return;
+      }
+
+      const elapsed = performance.now() - pressStartedAt;
+      const step = elapsed >= 2000 ? 100 : elapsed >= 500 ? 10 : 1;
+
+      changeFrequencyBy(activeDirection, step);
+    }, 100);
+  }
+}
+
+function handleStepPointerMove(event) {
+  if (event.pointerId !== activePointerId || !activeStepButton) {
+    return;
+  }
+
+  const rect = activeStepButton.getBoundingClientRect();
+  const isOutside =
+    event.clientX < rect.left
+    || event.clientX > rect.right
+    || event.clientY < rect.top
+    || event.clientY > rect.bottom;
+
+  if (isOutside) {
+    stopStepChange(event.pointerId);
+  }
+}
+
+function handleStepButtonClick(event, direction) {
+  // Pointer操作分のclickでは重複変更せず、キーボード操作のみ扱う
+  if (event.detail === 0) {
+    changeFrequencyBy(direction, 1);
   }
 }
 
@@ -144,18 +307,57 @@ async function startSound() {
   }
 }
 
-slider.addEventListener("input", updateFrequency);
+slider.addEventListener("input", () => {
+  currentFrequency = frequencyAtPosition(slider.value);
+  updateFrequency();
+});
+
+frequencyDownButton.addEventListener("pointerdown", (event) => {
+  startStepChange(event, frequencyDownButton, -1);
+});
+frequencyUpButton.addEventListener("pointerdown", (event) => {
+  startStepChange(event, frequencyUpButton, 1);
+});
+
+for (const button of [frequencyDownButton, frequencyUpButton]) {
+  button.addEventListener("pointerup", (event) => {
+    stopStepChange(event.pointerId);
+  });
+  button.addEventListener("pointercancel", (event) => {
+    stopStepChange(event.pointerId);
+  });
+  button.addEventListener("lostpointercapture", (event) => {
+    stopStepChange(event.pointerId);
+  });
+  button.addEventListener("pointermove", handleStepPointerMove);
+}
+
+frequencyDownButton.addEventListener("click", (event) => {
+  handleStepButtonClick(event, -1);
+});
+frequencyUpButton.addEventListener("click", (event) => {
+  handleStepButtonClick(event, 1);
+});
+
 startButton.addEventListener("click", startSound);
 stopButton.addEventListener("click", stopSound);
 
-window.addEventListener("pagehide", stopSound);
+window.addEventListener("pagehide", () => {
+  stopStepChange();
+  stopSound();
+});
+
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
+    stopStepChange();
     stopSound();
   }
 });
 
-window.addEventListener("blur", stopSound);
+window.addEventListener("blur", () => {
+  stopStepChange();
+  stopSound();
+});
 
 if (
   Number(slider.min) !== 0
@@ -166,4 +368,5 @@ if (
 }
 
 slider.value = String(positionForFrequency(1000));
+currentFrequency = frequencyAtPosition(slider.value);
 updateFrequency();
