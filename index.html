@@ -13,7 +13,7 @@
 
     <section class="experience" aria-label="音の周波数体験">
       <div class="frequency-display" aria-live="polite">
-        <span id="frequencyValue">10000</span>
+        <span id="frequencyValue">1,000</span>
         <span class="unit">Hz</span>
       </div>
 
@@ -21,16 +21,16 @@
         <input
           id="frequencySlider"
           type="range"
-          min="10"
-          max="25000"
-          step="1"
-          value="10000"
+          min="0"
+          max="1000"
+          step="0.01"
+          value="550"
           aria-label="音の周波数、10Hzから25,000Hz"
-          aria-valuetext="10,000 Hz"
+          aria-valuetext="1,000 Hz"
         >
         <div class="range-labels" aria-hidden="true">
-          <span>低い音 <span id="minFrequencyLabel">10 Hz</span></span>
-          <span><span id="maxFrequencyLabel">25,000 Hz</span> 高い音</span>
+          <span>低い音 10 Hz</span>
+          <span>25,000 Hz 高い音</span>
         </div>
       </div>
 
