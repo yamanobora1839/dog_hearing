@@ -4,10 +4,10 @@ const MIN_FREQUENCY = 10;
 const MAX_FREQUENCY = 25000;
 const SLIDER_MAX = 1000;
 const SLIDER_SEGMENTS = [
-  { start: 0, end: 350, minHz: 10, maxHz: 100 },
-  { start: 350, end: 500, minHz: 100, maxHz: 1000 },
-  { start: 500, end: 850, minHz: 1000, maxHz: 20000 },
-  { start: 850, end: 1000, minHz: 20000, maxHz: 25000 },
+  { start: 0, end: 300, minHz: 10, maxHz: 100 },
+  { start: 300, end: 550, minHz: 100, maxHz: 12000 },
+  { start: 550, end: 900, minHz: 12000, maxHz: 20000 },
+  { start: 900, end: 1000, minHz: 20000, maxHz: 25000 },
 ];
 
 const slider = document.getElementById("frequencySlider");
