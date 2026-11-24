@@ -225,15 +225,16 @@ input[type="range"]::-moz-range-thumb {
   border-radius: inherit;
 }
 
+/* 共通の線形目盛り：0～45,000Hz */
 .human-range {
-  left: 2.7%;
-  width: 88.4%;
+  left: 0.044444%; /* 20Hz / 45,000Hz */
+  width: 44.4%; /* (20,000Hz - 20Hz) / 45,000Hz */
   background: #71a9e3;
 }
 
 .dog-range {
-  left: 13.7%;
-  width: 86.3%;
+  left: 0.144444%; /* 65Hz / 45,000Hz */
+  width: 99.855556%; /* (45,000Hz - 65Hz) / 45,000Hz */
   background: #f0a36f;
 }
 
@@ -245,11 +246,30 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .scale-labels {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 1.4em;
   margin: 8px 0 0 52px;
   color: #65718a;
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.scale-labels span {
+  position: absolute;
+  white-space: nowrap;
+}
+
+.scale-start {
+  left: 0;
+}
+
+.scale-middle {
+  left: 44.444444%; /* 20,000Hz / 45,000Hz */
+  transform: translateX(-50%);
+}
+
+.scale-end {
+  right: 0;
 }
 
 .guide-note {
