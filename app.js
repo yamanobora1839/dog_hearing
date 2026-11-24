@@ -5,9 +5,9 @@ const MAX_FREQUENCY = 25000;
 const SLIDER_MAX = 1000;
 const SLIDER_SEGMENTS = [
   { start: 0, end: 350, minHz: 10, maxHz: 100 },
-  { start: 350, end: 550, minHz: 100, maxHz: 1000 },
-  { start: 550, end: 900, minHz: 1000, maxHz: 15000 },
-  { start: 900, end: 1000, minHz: 15000, maxHz: 25000 },
+  { start: 350, end: 500, minHz: 100, maxHz: 1000 },
+  { start: 500, end: 850, minHz: 1000, maxHz: 20000 },
+  { start: 850, end: 1000, minHz: 20000, maxHz: 25000 },
 ];
 
 const slider = document.getElementById("frequencySlider");
@@ -55,9 +55,9 @@ function getFrequencyExplanation(frequency) {
     return "この音は、人間には聞こえることがありますが、犬には聞こえにくい低い音です。";
   }
   if (frequency <= 20000) {
-    return "人間にも犬にも聞こえるとされる音域です。";
+    return "人間にも犬にも聞こえる可能性がある音域です。";
   }
-  return "人間には聞こえにくい高い音です。犬には聞こえるとされる音域です！";
+  return "人間には聞こえにくい高い音です。犬には聞こえる可能性があります！";
 }
 
 function updateFrequency() {
@@ -69,7 +69,6 @@ function updateFrequency() {
   slider.setAttribute("aria-valuetext", `${formattedFrequency} Hz`);
 
   if (isPlaying && oscillator && audioContext) {
-    // Keep the existing oscillator and smoothly update its frequency.
     oscillator.frequency.setTargetAtTime(
       frequency,
       audioContext.currentTime,
@@ -128,7 +127,6 @@ async function startSound() {
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
 
-    // Keep the existing low volume.
     gainNode.gain.setValueAtTime(0.035, audioContext.currentTime);
 
     oscillator.connect(gainNode);
